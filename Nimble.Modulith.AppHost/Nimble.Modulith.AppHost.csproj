@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.3.3">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nimble.Modulith.ServiceDefaults\Nimble.Modulith.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Nimble.Modulith.Web\Nimble.Modulith.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>e028483e-a8bc-46f3-95ac-a4267d9c6fb7</UserSecretsId>
+  </PropertyGroup>
+
+</Project>
