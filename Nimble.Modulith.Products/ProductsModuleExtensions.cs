@@ -16,7 +16,8 @@ public static class ProductsModuleExtensions
         // Add SQL Server DbContext with Aspire
         builder.AddSqlServerDbContext<ProductsDbContext>("productsdb");
 
-        logger.Information("{Module} module services registered", nameof(ProductsModuleExtensions).Replace("ModuleExtensions", ""));
+        logger.Information("{Module} module services registered",
+            nameof(ProductsModuleExtensions).Replace("ModuleExtensions", ""));
 
         return builder;
     }
@@ -25,8 +26,8 @@ public static class ProductsModuleExtensions
     {
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ProductsDbContext>();
-        await context.Database.EnsureCreatedAsync();
-        
+        await context.Database.MigrateAsync();
+
         return app;
     }
 }

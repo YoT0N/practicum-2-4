@@ -30,6 +30,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.PhoneNumber)
             .HasMaxLength(20);
 
+        // Configure Address as owned entity (value object)
         builder.OwnsOne(c => c.Address, address =>
         {
             address.Property(a => a.Street).HasMaxLength(200);

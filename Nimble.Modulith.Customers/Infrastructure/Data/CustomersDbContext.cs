@@ -17,9 +17,11 @@ public class CustomersDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
+        // Apply Customers module specific configurations
         builder.HasDefaultSchema("Customers");
-        
+
+        // Apply all configurations from this assembly
         builder.ApplyConfigurationsFromAssembly(typeof(CustomersDbContext).Assembly);
     }
 }

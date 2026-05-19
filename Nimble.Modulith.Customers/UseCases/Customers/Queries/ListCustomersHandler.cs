@@ -5,13 +5,13 @@ using Nimble.Modulith.Customers.Domain.Interfaces;
 
 namespace Nimble.Modulith.Customers.UseCases.Customers.Queries;
 
-public class ListCustomersHandler(IReadRepository<Customer> repository) 
+public class ListCustomersHandler(IReadRepository<Customer> repository)
     : IQueryHandler<ListCustomersQuery, Result<List<CustomerDto>>>
 {
     public async ValueTask<Result<List<CustomerDto>>> Handle(ListCustomersQuery query, CancellationToken ct)
     {
         var customers = await repository.ListAsync(ct);
-        
+
         var dtos = customers.Select(c => new CustomerDto(
             c.Id,
             c.FirstName,

@@ -24,18 +24,20 @@ public static class UsersModuleExtensions
         // Add Identity with SignInManager support
         builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
         {
+            // Configure Identity options
             options.Password.RequiredLength = 6;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireDigit = false;
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
-            
+
             options.User.RequireUniqueEmail = true;
         })
         .AddEntityFrameworkStores<UsersDbContext>()
         .AddDefaultTokenProviders();
 
-        logger.Information("{Module} module services registered", nameof(UsersModuleExtensions).Replace("ModuleExtensions", ""));
+        logger.Information("{Module} module services registered",
+            nameof(UsersModuleExtensions).Replace("ModuleExtensions", ""));
 
         return builder;
     }
@@ -45,7 +47,30 @@ public static class UsersModuleExtensions
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         await context.Database.EnsureCreatedAsync();
-        
+
+        // Seed roles programmatically
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        string[] roles = ["Admin", "Customer"];
+
+        foreach (var role in roles)
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+
+        // Seed requested admin user
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var email = "admin@myapp.com";
+        var user = await userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            user = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
+            await userManager.CreateAsync(user, "Admin123!");
+        }
+        await userManager.AddToRoleAsync(user, "Admin");
+
         return app;
     }
 }

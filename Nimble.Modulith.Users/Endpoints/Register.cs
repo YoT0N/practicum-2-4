@@ -8,7 +8,7 @@ public class RegisterRequest
 {
     [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
-    
+
     [Required, MinLength(6)]
     public string Password { get; set; } = string.Empty;
 }
@@ -21,7 +21,7 @@ public class RegisterResponse
     public List<string>? Errors { get; set; }
 }
 
-public class Register(UserManager<IdentityUser> userManager) : 
+public class Register(UserManager<IdentityUser> userManager) :
     Endpoint<RegisterRequest, RegisterResponse>
 {
     private readonly UserManager<IdentityUser> _userManager = userManager;
@@ -30,7 +30,8 @@ public class Register(UserManager<IdentityUser> userManager) :
     {
         Post("/register");
         AllowAnonymous();
-        Summary(s => {
+        Summary(s =>
+        {
             s.Summary = "Register a new user";
             s.Description = "Creates a new user account";
         });
@@ -38,14 +39,14 @@ public class Register(UserManager<IdentityUser> userManager) :
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
     {
-        var user = new IdentityUser 
-        { 
+        var user = new IdentityUser
+        {
             UserName = req.Email,
-            Email = req.Email 
+            Email = req.Email
         };
-        
+
         var result = await _userManager.CreateAsync(user, req.Password);
-        
+
         if (result.Succeeded)
         {
             Response = new RegisterResponse
@@ -54,7 +55,7 @@ public class Register(UserManager<IdentityUser> userManager) :
                 Message = "User created successfully",
                 UserId = user.Id
             };
-            
+
             await Send.OkAsync(Response, ct);
         }
         else

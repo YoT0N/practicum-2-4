@@ -8,7 +8,8 @@ public class CustomersDbContextFactory : IDesignTimeDbContextFactory<CustomersDb
     public CustomersDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<CustomersDbContext>();
-        optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=CustomersDb;Trusted_Connection=True;MultipleActiveResultSets=true");
+        optionsBuilder.UseSqlServer(
+            "Server=(localdb)\\mssqllocaldb;Database=CustomersDb;Trusted_Connection=True;MultipleActiveResultSets=true");
 
         return new CustomersDbContext(optionsBuilder.Options);
     }

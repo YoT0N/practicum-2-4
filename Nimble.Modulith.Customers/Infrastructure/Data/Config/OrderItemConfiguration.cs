@@ -22,6 +22,7 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(i => i.UnitPrice)
             .HasPrecision(18, 2);
 
+        // Ignore TotalPrice - it's a calculated property
         builder.Ignore(i => i.TotalPrice);
     }
 }

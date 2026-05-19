@@ -4,18 +4,19 @@ using Nimble.Modulith.Products.Data;
 
 namespace Nimble.Modulith.Products.Endpoints;
 
-public class ListResponse
-{
-    public List<ProductSummary> Products { get; set; } = [];
-}
-
-public class ProductSummary
+public class ProductListItem
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public decimal UnitPrice { get; set; }
     public DateTime DateCreated { get; set; }
     public string CreatedByUser { get; set; } = string.Empty;
+}
+
+public class ListResponse
+{
+    public List<ProductListItem> Products { get; set; } = new();
 }
 
 public class List(ProductsDbContext dbContext) : EndpointWithoutRequest<ListResponse>
@@ -26,22 +27,22 @@ public class List(ProductsDbContext dbContext) : EndpointWithoutRequest<ListResp
     {
         Get("/products");
         Tags("products");
-        AllowAnonymous();
         Summary(s =>
         {
             s.Summary = "List all products";
-            s.Description = "Retrieves a list of all products";
+            s.Description = "Retrieves a list of all products in the system";
         });
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
         var products = await _dbContext.Products
-            .Select(p => new ProductSummary
+            .Select(p => new ProductListItem
             {
                 Id = p.Id,
                 Name = p.Name,
                 Description = p.Description,
+                UnitPrice = p.UnitPrice,
                 DateCreated = p.DateCreated,
                 CreatedByUser = p.CreatedByUser
             })

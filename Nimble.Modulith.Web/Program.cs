@@ -1,11 +1,13 @@
-using FastEndpoints;
-using FastEndpoints.Security;
-using FastEndpoints.Swagger;
 using Nimble.Modulith.Users;
 using Nimble.Modulith.Products;
 using Nimble.Modulith.Customers;
+using Nimble.Modulith.Email;
+using Nimble.Modulith.Reporting;
 using Serilog;
-using Mediator;
+using FastEndpoints;
+using FastEndpoints.Security;
+using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Identity;
 
 var logger = Log.Logger = new LoggerConfiguration()
   .Enrich.FromLogContext()
@@ -20,7 +22,7 @@ builder.Host.UseSerilog((_, config) => config.ReadFrom.Configuration(builder.Con
 // Add service defaults (Aspire configuration)
 builder.AddServiceDefaults();
 
-// Add Mediator with source generation
+// Add Mediator (source-generated, scans all referenced assemblies)
 builder.Services.AddMediator(options =>
 {
     options.ServiceLifetime = ServiceLifetime.Scoped;
@@ -28,47 +30,41 @@ builder.Services.AddMediator(options =>
 
 // Add FastEndpoints with JWT Bearer Authentication and Authorization
 builder.Services.AddFastEndpoints()
-  .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration["Auth:JwtSecret"]!)
-  .AddAuthorization();
-
-// Add Swagger/OpenAPI
-builder.Services.SwaggerDocument(o =>
-{
-    o.DocumentSettings = s =>
+    .AddAuthenticationJwtBearer(s =>
     {
-        s.Title = "Nimble Modulith API";
-        s.Version = "v1";
-    };
-});
+        s.SigningKey = builder.Configuration["Auth:JwtSecret"];
+    })
+    .AddAuthorization()
+    .SwaggerDocument(o =>
+    {
+        o.DocumentSettings = s =>
+        {
+            s.Title = "Nimble Modulith API";
+            s.Version = "v1";
+        };
+    });
 
-// Register modules using IHostApplicationBuilder pattern
-var msLogger = LoggerFactory.Create(b => b.AddSerilog()).CreateLogger("Startup");
+// Add module services
 builder.AddUsersModuleServices(logger);
 builder.AddProductsModuleServices(logger);
-builder.AddCustomersModuleServices(msLogger);
+builder.AddCustomersModuleServices(logger);
+builder.AddEmailModuleServices(logger);
+builder.AddReportingModuleServices(logger);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-app.UseDefaultExceptionHandler();
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure FastEndpoints
-app.UseFastEndpoints();
+app.UseFastEndpoints()
+    .UseSwaggerGen();
 
-
-// Only use Swagger in Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwaggerGen();
-}
-
-app.MapDefaultEndpoints();
-
-// Ensure databases are created and migrated
+// Ensure module databases are created/migrated
 await app.EnsureUsersModuleDatabaseAsync();
 await app.EnsureProductsModuleDatabaseAsync();
 await app.EnsureCustomersModuleDatabaseAsync();
+await app.EnsureReportingModuleDatabaseAsync();
 
 app.Run();

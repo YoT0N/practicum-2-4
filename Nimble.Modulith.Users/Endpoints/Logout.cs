@@ -16,8 +16,9 @@ public class Logout(SignInManager<IdentityUser> signInManager) : EndpointWithout
     public override void Configure()
     {
         Post("/logout");
-        AllowAnonymous();
-        Summary(s => {
+        AllowAnonymous(); // For now, we'll require auth later when we implement JWT properly
+        Summary(s =>
+        {
             s.Summary = "Logout the current user";
             s.Description = "Signs out the current user";
         });
@@ -26,13 +27,13 @@ public class Logout(SignInManager<IdentityUser> signInManager) : EndpointWithout
     public override async Task HandleAsync(CancellationToken ct)
     {
         await _signInManager.SignOutAsync();
-        
+
         Response = new LogoutResponse
         {
             Success = true,
             Message = "Logged out successfully"
         };
-        
+
         await Send.OkAsync(Response, ct);
     }
 }

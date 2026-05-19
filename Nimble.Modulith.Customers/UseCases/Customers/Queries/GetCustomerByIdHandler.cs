@@ -6,7 +6,7 @@ using Nimble.Modulith.Customers.Domain.Interfaces;
 
 namespace Nimble.Modulith.Customers.UseCases.Customers.Queries;
 
-public class GetCustomerByIdHandler(IReadRepository<Customer> repository) 
+public class GetCustomerByIdHandler(IReadRepository<Customer> repository)
     : IQueryHandler<GetCustomerByIdQuery, Result<CustomerDto>>
 {
     public async ValueTask<Result<CustomerDto>> Handle(GetCustomerByIdQuery query, CancellationToken ct)
@@ -15,9 +15,7 @@ public class GetCustomerByIdHandler(IReadRepository<Customer> repository)
         var customer = await repository.FirstOrDefaultAsync(spec, ct);
 
         if (customer is null)
-        {
             return Result<CustomerDto>.NotFound();
-        }
 
         var dto = new CustomerDto(
             customer.Id,

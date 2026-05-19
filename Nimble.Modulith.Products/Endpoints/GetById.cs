@@ -14,6 +14,7 @@ public class GetByIdResponse
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public decimal UnitPrice { get; set; }
     public DateTime DateCreated { get; set; }
     public string CreatedByUser { get; set; } = string.Empty;
 }
@@ -26,7 +27,6 @@ public class GetById(ProductsDbContext dbContext) : Endpoint<GetByIdRequest, Get
     {
         Get("/products/{id}");
         Tags("products");
-        AllowAnonymous();
         Summary(s =>
         {
             s.Summary = "Get a product by ID";
@@ -50,6 +50,7 @@ public class GetById(ProductsDbContext dbContext) : Endpoint<GetByIdRequest, Get
             Id = product.Id,
             Name = product.Name,
             Description = product.Description,
+            UnitPrice = product.UnitPrice,
             DateCreated = product.DateCreated,
             CreatedByUser = product.CreatedByUser
         };

@@ -22,6 +22,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.CreatedByUser)
             .IsRequired()
-            .HasMaxLength(256);
+            .HasMaxLength(100);
     }
 }

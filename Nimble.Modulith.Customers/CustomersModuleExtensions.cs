@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Nimble.Modulith.Customers.Domain.Interfaces;
+using Nimble.Modulith.Customers.Infrastructure;
 using Nimble.Modulith.Customers.Infrastructure.Data;
+using Serilog;
 
 namespace Nimble.Modulith.Customers;
 
 public static class CustomersModuleExtensions
 {
-    public static IHostApplicationBuilder AddCustomersModuleServices(this IHostApplicationBuilder builder, ILogger logger)
+    public static IHostApplicationBuilder AddCustomersModuleServices(
+        this IHostApplicationBuilder builder,
+        ILogger logger)
     {
         // Register the DbContext with Aspire
         builder.AddSqlServerDbContext<CustomersDbContext>("customersdb");
@@ -19,6 +21,12 @@ public static class CustomersModuleExtensions
         // Register repositories
         builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfReadRepository<>));
+
+        // Register authorization service
+        builder.Services.AddScoped<ICustomerAuthorizationService, CustomerAuthorizationService>();
+
+        logger.Information("{Module} module services registered",
+            nameof(CustomersModuleExtensions).Replace("ModuleExtensions", ""));
 
         return builder;
     }

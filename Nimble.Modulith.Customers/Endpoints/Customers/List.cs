@@ -1,4 +1,3 @@
-using Ardalis.Result;
 using FastEndpoints;
 using Mediator;
 using Nimble.Modulith.Customers.UseCases.Customers.Queries;
@@ -10,19 +9,18 @@ public class List(IMediator mediator) : EndpointWithoutRequest<List<CustomerResp
     public override void Configure()
     {
         Get("/customers");
-        AllowAnonymous();
+        Roles("Admin");
+        Tags("customers");
         Summary(s =>
         {
             s.Summary = "List all customers";
-            s.Description = "Returns a list of all customers";
+            s.Description = "Returns a list of all customers (Admin only)";
         });
-        Tags("customers");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var query = new ListCustomersQuery();
-        var result = await mediator.Send(query, ct);
+        var result = await mediator.Send(new ListCustomersQuery(), ct);
 
         if (!result.IsSuccess)
         {
@@ -36,13 +34,7 @@ public class List(IMediator mediator) : EndpointWithoutRequest<List<CustomerResp
             c.LastName,
             c.Email,
             c.PhoneNumber,
-            new AddressResponse(
-                c.Address.Street,
-                c.Address.City,
-                c.Address.State,
-                c.Address.PostalCode,
-                c.Address.Country
-            )
+            new AddressResponse(c.Address.Street, c.Address.City, c.Address.State, c.Address.PostalCode, c.Address.Country)
         )).ToList();
     }
 }

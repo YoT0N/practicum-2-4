@@ -15,10 +15,10 @@ public class ProductsDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         // Apply Products module specific configurations
         builder.HasDefaultSchema("Products");
-        
+
         // Apply all configurations from this assembly
         builder.ApplyConfigurationsFromAssembly(typeof(ProductsDbContext).Assembly);
     }

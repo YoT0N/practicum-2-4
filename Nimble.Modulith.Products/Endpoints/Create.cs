@@ -1,15 +1,14 @@
 using FastEndpoints;
 using Nimble.Modulith.Products.Data;
 using Nimble.Modulith.Products.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace Nimble.Modulith.Products.Endpoints;
 
 public class CreateProductRequest
 {
-    [Required]
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public decimal UnitPrice { get; set; }
 }
 
 public class CreateProductResponse
@@ -17,6 +16,7 @@ public class CreateProductResponse
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public decimal UnitPrice { get; set; }
     public DateTime DateCreated { get; set; }
     public string CreatedByUser { get; set; } = string.Empty;
 }
@@ -29,10 +29,11 @@ public class Create(ProductsDbContext dbContext) : Endpoint<CreateProductRequest
     {
         Post("/products");
         Tags("products");
+        Roles("Admin");
         Summary(s =>
         {
             s.Summary = "Create a new product";
-            s.Description = "Creates a new product in the system";
+            s.Description = "Creates a new product with a name and description";
         });
     }
 
@@ -42,22 +43,22 @@ public class Create(ProductsDbContext dbContext) : Endpoint<CreateProductRequest
         {
             Name = req.Name,
             Description = req.Description,
+            UnitPrice = req.UnitPrice,
             DateCreated = DateTime.UtcNow,
-            CreatedByUser = User.Identity?.Name ?? "anonymous"
+            CreatedByUser = User.Identity?.Name ?? "Anonymous"
         };
-
+ 
         _dbContext.Products.Add(product);
         await _dbContext.SaveChangesAsync(ct);
-
+ 
         Response = new CreateProductResponse
         {
             Id = product.Id,
             Name = product.Name,
             Description = product.Description,
+            UnitPrice = product.UnitPrice,
             DateCreated = product.DateCreated,
             CreatedByUser = product.CreatedByUser
         };
-
-        await Send.CreatedAtAsync<GetById>(new { Id = product.Id }, Response, cancellation: ct);
     }
 }

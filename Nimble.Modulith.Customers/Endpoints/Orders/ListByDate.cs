@@ -9,13 +9,13 @@ public class ListByDate(IMediator mediator) : EndpointWithoutRequest<List<OrderR
     public override void Configure()
     {
         Get("/orders/by-date/{date}");
-        AllowAnonymous();
+        Roles("Admin");
+        Tags("orders");
         Summary(s =>
         {
             s.Summary = "List orders by date";
-            s.Description = "Returns all orders created on the specified date";
+            s.Description = "Returns all orders created on the specified date (Admin only, format: YYYY-MM-DD)";
         });
-        Tags("orders");
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -27,8 +27,7 @@ public class ListByDate(IMediator mediator) : EndpointWithoutRequest<List<OrderR
             return;
         }
 
-        var query = new ListOrdersByDateQuery(date);
-        var result = await mediator.Send(query, ct);
+        var result = await mediator.Send(new ListOrdersByDateQuery(date), ct);
 
         if (!result.IsSuccess)
         {
@@ -37,20 +36,8 @@ public class ListByDate(IMediator mediator) : EndpointWithoutRequest<List<OrderR
         }
 
         Response = result.Value.Select(o => new OrderResponse(
-            o.Id,
-            o.CustomerId,
-            o.OrderNumber,
-            o.OrderDate,
-            o.Status,
-            o.TotalAmount,
-            o.Items.Select(i => new OrderItemResponse(
-                i.Id,
-                i.ProductId,
-                i.ProductName,
-                i.Quantity,
-                i.UnitPrice,
-                i.TotalPrice
-            )).ToList()
+            o.Id, o.CustomerId, o.OrderNumber, o.OrderDate, o.Status, o.TotalAmount,
+            o.Items.Select(i => new OrderItemResponse(i.Id, i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.TotalPrice)).ToList()
         )).ToList();
     }
 }

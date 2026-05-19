@@ -1,27 +1,33 @@
 using Ardalis.Result;
 using FastEndpoints;
 using Mediator;
-using Nimble.Modulith.Customers.UseCases.Customers;
+using Nimble.Modulith.Customers.Infrastructure;
 using Nimble.Modulith.Customers.UseCases.Customers.Commands;
 
 namespace Nimble.Modulith.Customers.Endpoints.Customers;
 
-public class Create(IMediator mediator) : Endpoint<CreateCustomerRequest, CustomerResponse>
+public class Create(IMediator mediator, ICustomerAuthorizationService authService) : Endpoint<CreateCustomerRequest, CustomerResponse>
 {
     public override void Configure()
     {
         Post("/customers");
-        AllowAnonymous();
+        Tags("customers");
         Summary(s =>
         {
             s.Summary = "Create a new customer";
-            s.Description = "Creates a new customer with the provided information";
+            s.Description = "Creates a new customer. Admins can create for anyone; users can only create for themselves.";
         });
-        Tags("customers");
     }
 
     public override async Task HandleAsync(CreateCustomerRequest req, CancellationToken ct)
     {
+        if (!authService.IsAdminOrOwner(User, req.Email))
+        {
+            AddError("You can only create a customer record for your own email address");
+            await Send.ErrorsAsync(statusCode: 403, cancellation: ct);
+            return;
+        }
+
         var command = new CreateCustomerCommand(
             req.FirstName,
             req.LastName,
@@ -56,5 +62,7 @@ public class Create(IMediator mediator) : Endpoint<CreateCustomerRequest, Custom
                 result.Value.Address.Country
             )
         );
+
+        await Send.CreatedAtAsync<GetById>(new { id = result.Value.Id }, generateAbsoluteUrl: false, cancellation: ct);
     }
 }

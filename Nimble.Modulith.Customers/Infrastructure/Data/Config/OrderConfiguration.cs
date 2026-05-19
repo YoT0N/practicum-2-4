@@ -26,6 +26,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired()
             .HasConversion<string>();
 
+        // Ignore TotalAmount - it's a calculated property
         builder.Ignore(o => o.TotalAmount);
 
         builder.HasMany(o => o.Items)
