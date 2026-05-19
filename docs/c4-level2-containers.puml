@@ -1,0 +1,35 @@
+@startuml c4-level2-containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Model — Level 2: Containers\nNimble Modulith
+
+Person(admin, "Адміністратор")
+Person(customer, "Клієнт")
+
+System_Boundary(aspire, ".NET Aspire (оркестратор)") {
+
+    Container(webapi, "Web API", ".NET 10\nASP.NET Core + FastEndpoints", "Єдина точка входу.\nМістить усі модулі як бібліотеки.\nОбробляє HTTP-запити, JWT автентифікацію")
+
+    ContainerDb(usersdb, "Users DB", "SQL Server\nSchema: dbo (Identity)", "Користувачі, ролі,\nтокени Identity")
+
+    ContainerDb(productsdb, "Products DB", "SQL Server\nSchema: Products", "Каталог продуктів\nз цінами")
+
+    ContainerDb(customersdb, "Customers DB", "SQL Server\nSchema: Customers", "Клієнти, замовлення,\nпозиції замовлень")
+
+    ContainerDb(reportingdb, "Reporting DB", "SQL Server\nStar Schema", "DimCustomer, DimProduct,\nDimDate, FactOrders")
+}
+
+System_Ext(smtp, "SMTP-сервер\n(Papercut)", "Приймає вихідні\nелектронні листи")
+
+Rel(admin, webapi, "REST API", "HTTPS/JSON")
+Rel(customer, webapi, "REST API", "HTTPS/JSON")
+
+Rel(webapi, usersdb, "Читає/Пише\n(EF Core Identity)", "SQL/TCP")
+Rel(webapi, productsdb, "Читає/Пише\n(EF Core)", "SQL/TCP")
+Rel(webapi, customersdb, "Читає/Пише\n(EF Core)", "SQL/TCP")
+Rel(webapi, reportingdb, "Пише (EF Core)\nЧитає (Dapper)", "SQL/TCP")
+Rel(webapi, smtp, "Надсилає листи\n(фонова черга)", "SMTP/TCP")
+
+@enduml

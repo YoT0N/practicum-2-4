@@ -1,0 +1,19 @@
+@startuml c4-level1-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Model — Level 1: System Context\nNimble Modulith
+
+Person(admin, "Адміністратор", "Управляє продуктами,\nкористувачами та переглядає звіти")
+Person(customer, "Клієнт", "Переглядає продукти,\nстворює та підтверджує замовлення")
+
+System(nimble, "Nimble Modulith", "Система управління замовленнями.\nМодульний моноліт на .NET 10")
+
+System_Ext(smtp, "SMTP-сервер\n(Papercut у dev)", "Приймає та зберігає\nвихідні електронні листи")
+
+Rel(admin, nimble, "Використовує", "HTTPS / REST API")
+Rel(customer, nimble, "Використовує", "HTTPS / REST API")
+Rel(nimble, smtp, "Надсилає email-повідомлення", "SMTP / TCP 25")
+
+@enduml

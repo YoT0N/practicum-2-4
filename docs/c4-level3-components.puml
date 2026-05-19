@@ -1,0 +1,98 @@
+@startuml c4-level3-components
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Model — Level 3: Components\nWeb API — внутрішня структура модулів
+
+Person(user, "Користувач / Адмін")
+
+System_Boundary(webapi, "Web API (.NET 10 процес)") {
+
+    ' --- Users Module ---
+    Boundary(users_mod, "Users Module") {
+        Component(users_ep, "User Endpoints", "FastEndpoints", "Register, Login, Logout,\nAddRole, ResetPassword")
+        Component(users_uc, "Use Cases", "Mediator Handlers", "CreateUserInternalCommand")
+        Component(users_events, "User Events", "INotificationHandler", "UserAddedToRoleEvent →\nнадсилає email")
+    }
+
+    ' --- Products Module ---
+    Boundary(products_mod, "Products Module") {
+        Component(prod_ep, "Product Endpoints", "FastEndpoints", "CRUD продуктів")
+        Component(prod_queries, "Query Handlers", "Mediator Handlers", "GetProductDetailsQuery\nGetProductPriceQuery")
+    }
+
+    ' --- Customers Module ---
+    Boundary(customers_mod, "Customers Module") {
+        Component(cust_ep, "Customer Endpoints", "FastEndpoints", "CRUD клієнтів")
+        Component(order_ep, "Order Endpoints", "FastEndpoints", "Create, Confirm, AddItem,\nDeleteItem, GetById")
+        Component(cust_uc, "Customer Use Cases", "Mediator Handlers", "CreateCustomer → створює User\nта надсилає вітальний email")
+        Component(order_uc, "Order Use Cases", "Mediator Handlers", "CreateOrder, ConfirmOrder →\nPublish OrderCreatedEvent")
+        Component(cust_auth, "Authorization Service", "ICustomerAuthorizationService", "Перевірка власника\nданих (Admin або owner)")
+    }
+
+    ' --- Email Module ---
+    Boundary(email_mod, "Email Module") {
+        Component(email_handler, "SendEmail Handler", "ICommandHandler", "Приймає SendEmailCommand\nдодає в чергу")
+        Component(email_queue, "Channel Queue", "System.Threading.Channels", "Unbounded channel\nдля email-повідомлень")
+        Component(email_worker, "Background Worker", "BackgroundService", "Читає з черги\nта відправляє через SMTP")
+        Component(smtp_sender, "SMTP Sender", "MailKit SmtpClient", "Підключається до SMTP\nта надсилає MimeMessage")
+    }
+
+    ' --- Reporting Module ---
+    Boundary(reporting_mod, "Reporting Module") {
+        Component(report_ingest, "OrderCreatedEventHandler", "INotificationHandler", "Ingests order data\nу star schema (EF Core)")
+        Component(report_svc, "Report Service", "Dapper SQL queries", "Агрегатні звіти:\nOrders, ProductSales,\nCustomerLifetime")
+        Component(report_ep, "Report Endpoints", "FastEndpoints", "GET /reports/orders\nGET /reports/product-sales\nGET /reports/customers/{id}/orders")
+    }
+
+    ' --- Shared ---
+    Component(mediator, "Mediator (in-process)", "Source-generated dispatcher", "Маршрутизує команди,\nзапити та події між модулями")
+}
+
+ContainerDb(usersdb, "Users DB", "SQL Server")
+ContainerDb(productsdb, "Products DB", "SQL Server")
+ContainerDb(customersdb, "Customers DB", "SQL Server")
+ContainerDb(reportingdb, "Reporting DB", "SQL Server")
+System_Ext(smtp_ext, "SMTP Server")
+
+Rel(user, users_ep, "HTTP", "HTTPS")
+Rel(user, prod_ep, "HTTP", "HTTPS")
+Rel(user, cust_ep, "HTTP", "HTTPS")
+Rel(user, order_ep, "HTTP", "HTTPS")
+Rel(user, report_ep, "HTTP", "HTTPS")
+
+Rel(users_ep, mediator, "Send command/query")
+Rel(prod_ep, mediator, "Send command/query")
+Rel(cust_ep, mediator, "Send command/query")
+Rel(order_ep, mediator, "Send command/query")
+
+Rel(mediator, users_uc, "Routes to")
+Rel(mediator, prod_queries, "Routes to")
+Rel(mediator, cust_uc, "Routes to")
+Rel(mediator, order_uc, "Routes to")
+Rel(mediator, email_handler, "Routes SendEmailCommand")
+Rel(mediator, report_ingest, "Publishes OrderCreatedEvent")
+Rel(mediator, users_events, "Publishes UserAddedToRoleEvent")
+
+Rel(order_uc, mediator, "Publish OrderCreatedEvent\nSend GetProductDetailsQuery")
+Rel(cust_uc, mediator, "Send CreateUserCommand\nSend SendEmailCommand")
+Rel(users_events, mediator, "Send SendEmailCommand")
+
+Rel(email_handler, email_queue, "Enqueue")
+Rel(email_worker, email_queue, "Dequeue")
+Rel(email_worker, smtp_sender, "Send")
+Rel(smtp_sender, smtp_ext, "SMTP")
+
+Rel(users_uc, usersdb, "EF Core Identity")
+Rel(prod_queries, productsdb, "EF Core")
+Rel(cust_uc, customersdb, "EF Core")
+Rel(order_uc, customersdb, "EF Core")
+Rel(report_ingest, reportingdb, "EF Core")
+Rel(report_svc, reportingdb, "Dapper")
+Rel(report_ep, report_svc, "Calls")
+
+Rel(cust_ep, cust_auth, "Checks ownership")
+Rel(order_ep, cust_auth, "Checks ownership")
+
+@enduml
